@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 
-# Download Link Examples by OS
-## macOS - https://get.helm.sh/helm-v2.16.0-darwin-amd64.tar.gz
-## WinOS - https://get.helm.sh/helm-v2.16.0-windows-amd64.zip
-## Linux - https://get.helm.sh/helm-v2.16.0-linux-amd64.tar.gz
-readonly VERSION="$1"
+VERSION="$1"
 
 if [ -z $VERSION ]; then
-  echo "Please provide a valid semantic version number for Helm."
+  echo "Please provide a valid semantic version for Helm."
   exit 1
+else
+  readonly VERSION="${VERSION#[Vv]}"
 fi
 
-getHelm::OSConfig(){
+getHelm::genConfig(){
   local get_system_name
   get_system_name="$(uname | tr '[:upper:]' '[:lower:]')"
   case "$get_system_name" in
@@ -35,26 +33,79 @@ getHelm::OSConfig(){
       return 1
     ;;
   esac
+  readonly ARTIFACT="helm-v${VERSION}-${HOST_OS}-${ARCH}.${EXT}"
+  readonly ARTIFACT_SHA="${ARTIFACT}.sha256"
+  readonly ARTIFACTS_ENDPOINT="https://get.helm.sh"
 }
 
-getHelm::getArtifact(){
-  local download_endpoint
-  download_endpoint="https://get.helm.sh/helm-v${VERSION}-${HOST_OS}-${ARCH}.${EXT}"
-  curl -sO "$download_endpoint"
+getHelm::genSHA256(){
+  local file
+  file="$1"
+  if [ "$HOST_OS" -eq "windows" ]; then
+    echo "$(sha265sum.exe "$file" | awk '{ printf $1 }')"
+  else
+    echo "$(sha256sum "$file" | awk '{ printf $1 }')"
+  fi
+}
+
+getHelm::genHelmDir(){
+  local helm_directory="./bin/helm"
+  if ! mkdir -p "$helm_directory" > /dev/null 2>&1; then
+    return 1
+  fi
+}
+
+getHelm::downloadArtifact(){
+  if ! curl -sO "$ARTIFACTS_ENDPOINT/${ARTIFACT}" > /dev/null 2>&1; then
+    return 1
+  fi
+}
+
+getHelm::downloadArtifactSHA(){
+  if ! curl -sO "${ARTIFACTS_ENDPOINT}/${ARTIFACT_SHA}" > /dev/null 2>&1; then
+    return 1
+  fi
+}
+
+getHelm::extractArtifact(){
+  local file="$1"
+  if [ "$HOST_OS" -eq "windows" ]; then
+    unzip "$file" > /dev/null 2>&1
+  else
+    tar -xvf "$file" > /dev/null 2>&1
+  fi
+}
+
+getHelm::artifactExists(){
+  file="$1"
+  if [ ! -f "$file" ]; then
+    return 1
+  fi
 }
 
 getHelm::init(){
-  if ! getHelm::OSConfig; then
-    echo "Could not determine your operating system."
+  if ! getHelm::genConfig; then
+    echo "Could not determine your operating system. Aborting."
     exit 1
   fi
 
-  if ! getHelm::getArtifact; then
-    echo "Unable to download Helm v${VERSION}."
+  if ! getHelm::genHelmBin
+
+  if ! getHelm::downloadArtifact; then
+    echo "Unable to download package for Helm v${VERSION}. Aborting."
     exit 1
   fi  
+  
+  if ! getHelm::downloadArtifactSHA; then
+    echo "Unable to download the SHA for Helm v${VERSION}. Aborting."
+    exit 1
+  fi
+  
+  if ! getHelm::artfactExists; then
+    echo "Could not locate Helm package. Aboirting."
+    exit 1
+  fi
 
-  echo "Successfully download Helm v${VERSION} for ${HOST_OS}."
 }
 
 getHelm::init
