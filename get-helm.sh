@@ -115,7 +115,7 @@ getHelm::init(){
   generated_checksum="$(getHelm::genSHA256 "${HELM_HOME}"/"${ARTIFACT}")" 
 
   if [ "${generated_checksum}" != "${desired_checksum}" ]; then
-    echo "The generated checksum for the artifact doess not match the desired checksum. Aborting."
+    echo "The generated checksum for the artifact does not match the desired checksum. Aborting."
     exit 1
   fi 
  
