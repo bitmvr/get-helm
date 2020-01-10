@@ -85,13 +85,6 @@ getHelm::extractArtifact(){
   fi
 }
 
-getHelm::artifactExists(){
-  file="$1"
-  if [ ! -f "$file" ]; then
-    return 1
-  fi
-}
-
 getHelm::init(){
   if ! getHelm::genConfig; then
     echo "Could not determine your operating system. Aborting."
@@ -123,13 +116,8 @@ getHelm::init(){
     exit 1
   fi 
  
-  # if ! getHelm::artifactExists; then
-  #  echo "Could not locate Helm package to extract. Aborting."
-  #  exit 1
-  # fi
-
   if ! getHelm::extractArtifact "${HELM_HOME}/${ARTIFACT}"; then
-    echo "Could not extract Helm."
+    echo "Could not extract Helm. Please ensure the artifact exists. Aborting."
   fi
 
 }
