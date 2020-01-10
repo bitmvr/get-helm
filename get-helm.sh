@@ -48,25 +48,31 @@ getHelm::genSHA256(){
   fi
 }
 
-getHelm::genHelmDir(){
+getHelm::genHelmHome(){
   if [ -z "$FABRIC_HOME" ]; then
-    export HELM_HOME="./bin/helm"
+    export HELM_HOME="${PWD}/bin/helm"
   else
     export HELM_HOME="${FABRIC_HOME}/bin/helm"
   fi
   
-  if ! mkdir -p "$HELM_HOME" > /dev/null 2>&1; then
+  #if ! mkdir -p "$HELM_HOME" > /dev/null 2>&1; then
+  echo "Fabric Home=${FABRIC_HOME}"
+  echo "Helm Home=${HELM_HOME}"
+  if ! mkdir -p "$HELM_HOME"; then
     return 1
   fi
 }
 
 getHelm::downloadArtifact(){
+  cd "$HELM_HOME" || return 1
   if ! curl -sO "$ARTIFACTS_ENDPOINT/${ARTIFACT}" > /dev/null 2>&1; then
     return 1
   fi
 }
 
 getHelm::downloadArtifactSHA(){
+  echo "$PWD"
+  cd "$HELM_HOME" || return 1
   if ! curl -sO "${ARTIFACTS_ENDPOINT}/${ARTIFACT_SHA}" > /dev/null 2>&1; then
     return 1
   fi
@@ -94,7 +100,7 @@ getHelm::init(){
     exit 1
   fi
 
-  if ! getHelm::genHelmBin; then
+  if ! getHelm::genHelmHome; then
     echo "Could not create the install directory for Helm."
     exit 1
   fi
@@ -119,10 +125,15 @@ getHelm::init(){
     exit 1
   fi 
  
-  if ! getHelm::artifactExists; then
-    echo "Could not locate Helm package to extract. Aborting."
-    exit 1
+  # if ! getHelm::artifactExists; then
+  #  echo "Could not locate Helm package to extract. Aborting."
+  #  exit 1
+  # fi
+
+  if ! getHelm::extractArtifact "${HELM_HOME}/${ARTIFACT}${HELM_HOME}/${ARTIFACT}"; then
+    echo "Could not extract Helm."
   fi
+
 }
 
 getHelm::init
