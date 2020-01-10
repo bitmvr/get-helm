@@ -128,6 +128,8 @@ getHelm::init(){
     echo "Unable to cleanup archives. Continuing..."
   fi
 
+  echo "Successfully installed Helm v${VERSION}!"
+
 }
 
 getHelm::init
