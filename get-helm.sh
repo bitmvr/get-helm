@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# set -x
+
 VERSION="$1"
 
 if [ -z "$VERSION" ]; then
@@ -55,10 +57,7 @@ getHelm::genHelmHome(){
     export HELM_HOME="${FABRIC_HOME}/bin/helm"
   fi
   
-  #if ! mkdir -p "$HELM_HOME" > /dev/null 2>&1; then
-  echo "Fabric Home=${FABRIC_HOME}"
-  echo "Helm Home=${HELM_HOME}"
-  if ! mkdir -p "$HELM_HOME"; then
+  if ! mkdir -p "$HELM_HOME" > /dev/null 2>&1; then
     return 1
   fi
 }
@@ -71,7 +70,6 @@ getHelm::downloadArtifact(){
 }
 
 getHelm::downloadArtifactSHA(){
-  echo "$PWD"
   cd "$HELM_HOME" || return 1
   if ! curl -sO "${ARTIFACTS_ENDPOINT}/${ARTIFACT_SHA}" > /dev/null 2>&1; then
     return 1
@@ -83,7 +81,7 @@ getHelm::extractArtifact(){
   if [ "$HOST_OS" == "windows" ]; then
     unzip "$file" > /dev/null 2>&1
   else
-    tar -xvf "$file" > /dev/null 2>&1
+    tar --extract --strip-components 1 --file "$file" "*/helm" "*/tiller"
   fi
 }
 
@@ -130,7 +128,7 @@ getHelm::init(){
   #  exit 1
   # fi
 
-  if ! getHelm::extractArtifact "${HELM_HOME}/${ARTIFACT}${HELM_HOME}/${ARTIFACT}"; then
+  if ! getHelm::extractArtifact "${HELM_HOME}/${ARTIFACT}"; then
     echo "Could not extract Helm."
   fi
 
