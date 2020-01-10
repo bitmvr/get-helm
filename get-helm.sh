@@ -85,6 +85,11 @@ getHelm::extractArtifact(){
   fi
 }
 
+getHelm::downloadCleanup(){
+  cd "$HELM_HOME" || return 1
+  find "$HELM_HOME" -type f ! -name helm ! -name tiller | xargs rm || return 1
+}
+
 getHelm::init(){
   if ! getHelm::genConfig; then
     echo "Could not determine your operating system. Aborting."
@@ -118,6 +123,10 @@ getHelm::init(){
  
   if ! getHelm::extractArtifact "${HELM_HOME}/${ARTIFACT}"; then
     echo "Could not extract Helm. Please ensure the artifact exists. Aborting."
+  fi
+
+  if ! getHelm::downloadCleanup; then
+    echo "Unable to cleanup archives, checksum, and/or non-essential files. Continuing..."
   fi
 
 }
