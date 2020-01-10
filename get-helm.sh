@@ -41,7 +41,7 @@ getHelm::genConfig(){
 getHelm::genSHA256(){
   local file
   file="$1"
-  if [ "$HOST_OS" -eq "windows" ]; then
+  if [ "$HOST_OS" == "windows" ]; then
     echo "$(sha265sum.exe "$file" | awk '{ printf $1 }')"
   else
     echo "$(sha256sum "$file" | awk '{ printf $1 }')"
@@ -74,7 +74,7 @@ getHelm::downloadArtifactSHA(){
 
 getHelm::extractArtifact(){
   local file="$1"
-  if [ "$HOST_OS" -eq "windows" ]; then
+  if [ "$HOST_OS" == "windows" ]; then
     unzip "$file" > /dev/null 2>&1
   else
     tar -xvf "$file" > /dev/null 2>&1
@@ -109,12 +109,16 @@ getHelm::init(){
     exit 1
   fi
  
-  if [ ! "$(getHelm::genSHA256 "${HELM_HOME}/${ARTIFACT}")" -eq "$(getHelm::genSHA256 "${HELM_HOME}/${ARTIFACT_SHA}")" ]; then
-    echo "The checksum for Helm v${VERSION} is invalid. Aboirting."
+  local desired_checksum="$(cat ${HELM_HOME}/${ARTIFACT_SHA})"
+  local generated_checksum="$(getHelm::genSHA256 ${HELM_HOME}/${ARTIFACT})" 
+
+  if [ "${generated_checksum}" != "${desired_checksum}" ]; then
+    echo "The generated checksum for the artifact doess not match the desired checksum. Aborting."
+    exit 1
   fi 
  
   if ! getHelm::artfactExists; then
-    echo "Could not locate Helm package. Aboirting."
+    echo "Could not locate Helm package to extract. Aborting."
     exit 1
   fi
 }
