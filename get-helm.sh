@@ -86,8 +86,7 @@ getHelm::extractArtifact(){
 }
 
 getHelm::downloadCleanup(){
-  cd "$HELM_HOME" || return 1
-  find "$HELM_HOME" -type f ! -name helm ! -name tiller | xargs rm || return 1
+  rm "${HELM_HOME}/${ARTIFACT}" "${HELM_HOME}/${ARTIFACT_SHA}"
 }
 
 getHelm::init(){
@@ -126,7 +125,7 @@ getHelm::init(){
   fi
 
   if ! getHelm::downloadCleanup; then
-    echo "Unable to cleanup archives, checksum, and/or non-essential files. Continuing..."
+    echo "Unable to cleanup archives. Continuing..."
   fi
 
 }
