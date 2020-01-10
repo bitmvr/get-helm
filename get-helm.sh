@@ -2,7 +2,7 @@
 
 VERSION="$1"
 
-if [ -z $VERSION ]; then
+if [ -z "$VERSION" ]; then
   echo "Please provide a valid semantic version for Helm."
   exit 1
 else
@@ -42,9 +42,9 @@ getHelm::genSHA256(){
   local file
   file="$1"
   if [ "$HOST_OS" == "windows" ]; then
-    echo "$(sha265sum.exe "$file" | awk '{ printf $1 }')"
+    sha265sum.exe "$file" | awk '{ printf $1 }'
   else
-    echo "$(sha256sum "$file" | awk '{ printf $1 }')"
+    sha256sum "$file" | awk '{ printf $1 }'
   fi
 }
 
@@ -109,15 +109,17 @@ getHelm::init(){
     exit 1
   fi
  
-  local desired_checksum="$(cat ${HELM_HOME}/${ARTIFACT_SHA})"
-  local generated_checksum="$(getHelm::genSHA256 ${HELM_HOME}/${ARTIFACT})" 
+  local desired_checksum
+  local generated_checksum
+  desired_checksum="$(cat "${HELM_HOME}"/"${ARTIFACT_SHA}")"
+  generated_checksum="$(getHelm::genSHA256 "${HELM_HOME}"/"${ARTIFACT}")" 
 
   if [ "${generated_checksum}" != "${desired_checksum}" ]; then
     echo "The generated checksum for the artifact doess not match the desired checksum. Aborting."
     exit 1
   fi 
  
-  if ! getHelm::artfactExists; then
+  if ! getHelm::artifactExists; then
     echo "Could not locate Helm package to extract. Aborting."
     exit 1
   fi
