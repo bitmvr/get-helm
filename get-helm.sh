@@ -49,8 +49,13 @@ getHelm::genSHA256(){
 }
 
 getHelm::genHelmDir(){
-  local helm_directory="./bin/helm"
-  if ! mkdir -p "$helm_directory" > /dev/null 2>&1; then
+  if [ -z "$FABRIC_HOME" ]; then
+    export HELM_HOME="./bin/helm"
+  else
+    export HELM_HOME="${FABRIC_HOME}/bin/helm"
+  fi
+  
+  if ! mkdir -p "$HELM_HOME" > /dev/null 2>&1; then
     return 1
   fi
 }
@@ -89,7 +94,10 @@ getHelm::init(){
     exit 1
   fi
 
-  if ! getHelm::genHelmBin
+  if ! getHelm::genHelmBin; then
+    echo "Could not create the install directory for Helm."
+    exit 1
+  fi
 
   if ! getHelm::downloadArtifact; then
     echo "Unable to download package for Helm v${VERSION}. Aborting."
@@ -100,12 +108,15 @@ getHelm::init(){
     echo "Unable to download the SHA for Helm v${VERSION}. Aborting."
     exit 1
   fi
-  
+ 
+  if [ ! "$(getHelm::genSHA256 "${HELM_HOME}/${ARTIFACT}")" -eq "$(getHelm::genSHA256 "${HELM_HOME}/${ARTIFACT_SHA}")" ]; then
+    echo "The checksum for Helm v${VERSION} is invalid. Aboirting."
+  fi 
+ 
   if ! getHelm::artfactExists; then
     echo "Could not locate Helm package. Aboirting."
     exit 1
   fi
-
 }
 
 getHelm::init
