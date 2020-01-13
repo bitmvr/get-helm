@@ -44,7 +44,7 @@ getHelm::genSHA256(){
   local file
   file="$1"
   if [ "$HOST_OS" == "windows" ]; then
-    sha265sum.exe "$file" | awk '{ printf $1 }'
+    sha256sum.exe "$file" | awk '{ printf $1 }'
   else
     sha256sum "$file" | awk '{ printf $1 }'
   fi
@@ -79,7 +79,7 @@ getHelm::downloadArtifactSHA(){
 getHelm::extractArtifact(){
   local file="$1"
   if [ "$HOST_OS" == "windows" ]; then
-    unzip "$file" > /dev/null 2>&1
+    unzip -j "$file" "*/helm.exe" "*/tiller.exe" > /dev/null 2>&1
   else
     tar --extract --strip-components 1 --file "$file" "*/helm" "*/tiller"
   fi
