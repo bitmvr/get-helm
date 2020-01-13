@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# set -x
+get_helm_version="1.0.0"
 
 VERSION="$1"
 
